@@ -226,8 +226,8 @@ if file_name.endswith(".csv"):
                         st.pyplot(fig)
                     except Exception as e:
                         st.error(f"Prediction failed: {e}")
-else:
-    st.info("No 'date' column found in your dataset. Please ensure your dataset includes a date column for time-based prediction.")
+            else:
+                st.info("No 'date' column found in your dataset. Please ensure your dataset includes a date column for time-based prediction.")
             
 
 else:
