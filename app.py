@@ -198,7 +198,7 @@ if file_name.endswith(".csv"):
             b.seek(0)
 
             st.download_button("Download trained model (.pkl)", data=b, file_name="rf_model.pkl", mime="application/octet-stream")
-            if st.button("Train model"):
+            if st.button("Train model",key="train_model_button"):
                 ...
                 st.session_state["model"] = model
                 st.session_state["features"] = features
@@ -269,6 +269,7 @@ else:
 # Footer
 st.markdown("---")
 st.caption("Built with Streamlit — modify the file to add custom visualizations or model pipelines.")
+
 
 
 
