@@ -202,7 +202,13 @@ if file_name.endswith(".csv"):
 
             if "date" in df.columns:
                 st.write("Select a base date to predict flood conditions for upcoming days.")
-                input_date = st.date_input("Select date", pd.to_datetime(df["date"].min()))
+                today = pd.Timestamp.today()
+                if today.year < 2019:
+                    today = pd.Timestamp("2019-01-01")
+                elif today.year > 2025:
+                    today = pd.Timestamp("2025-12-31")
+                st.write(f"Using current date for prediction: {today.date()}")
+                input_date = today
             
                 if st.button("Predict Flood After 5–7 Days"):
                     try:
@@ -253,4 +259,5 @@ else:
 # Footer
 st.markdown("---")
 st.caption("Built with Streamlit — modify the file to add custom visualizations or model pipelines.")
+
 
