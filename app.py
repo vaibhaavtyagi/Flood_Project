@@ -198,42 +198,52 @@ if file_name.endswith(".csv"):
             b.seek(0)
 
             st.download_button("Download trained model (.pkl)", data=b, file_name="rf_model.pkl", mime="application/octet-stream")
-            st.header("📅 Flood Prediction for Future Dates")
-
-            if "date" in df.columns:
-                st.write("Select a base date to predict flood conditions for upcoming days.")
-                today = pd.Timestamp.today()
-                if today.year < 2019:
-                    today = pd.Timestamp("2019-01-01")
-                elif today.year > 2025:
-                    today = pd.Timestamp("2025-12-31")
-                st.write(f"Using current date for prediction: {today.date()}")
-                input_date = today
+            if st.button("Train model"):
+                ...
+                st.session_state["model"] = model
+                st.session_state["features"] = features
+                st.session_state["df"] = df
             
-                if st.button("Predict Flood After 5–7 Days"):
-                    try:
-                        future_dates = [input_date + pd.Timedelta(days=d) for d in [5, 7]]
-                        st.write("🕒 Predicting flood for future dates:", future_dates)
-                        last_features = df[features].iloc[-1:].copy()
-                        preds = {}
-                        for d in future_dates:
-                            preds[str(d.date())] = model.predict(last_features)[0]
-                        st.subheader("🌧 Flood Prediction Results")
-                        results_df = pd.DataFrame({
-                            "Date": preds.keys(),
-                            "Predicted Flood Value": preds.values()
-                        })
-                        st.dataframe(results_df)
-                        fig, ax = plt.subplots()
-                        ax.plot(results_df["Date"], results_df["Predicted Flood Value"], marker='o')
-                        ax.set_title("Predicted Flood Severity (Next 5–7 Days)")
-                        ax.set_xlabel("Date")
-                        ax.set_ylabel("Prediction Value")
-                        st.pyplot(fig)
-                    except Exception as e:
-                        st.error(f"Prediction failed: {e}")
-            else:
-                st.info("No 'date' column found in your dataset. Please ensure your dataset includes a date column for time-based prediction.")
+            # ---- Flood prediction section (outside the training block) ----
+            if "model" in st.session_state:
+                model = st.session_state["model"]
+                df = st.session_state["df"]
+                features = st.session_state["features"]
+            
+                st.header("📅 Flood Prediction for Future Dates")
+                if "date" in df.columns:
+                    today = pd.Timestamp.today()
+                    if today.year < 2019:
+                        today = pd.Timestamp("2019-01-01")
+                    elif today.year > 2025:
+                        today = pd.Timestamp("2025-12-31")
+                    st.write(f"Using current date for prediction: {today.date()}")
+                    input_date = today
+            
+                    if st.button("Predict Flood After 5–7 Days"):
+                        try:
+                            future_dates = [input_date + pd.Timedelta(days=d) for d in [5, 7]]
+                            st.write("🕒 Predicting flood for future dates:", future_dates)
+                            last_features = df[features].iloc[-1:].copy()
+                            preds = {}
+                            for d in future_dates:
+                                preds[str(d.date())] = model.predict(last_features)[0]
+                            st.subheader("🌧 Flood Prediction Results")
+                            results_df = pd.DataFrame({
+                                "Date": preds.keys(),
+                                "Predicted Flood Value": preds.values()
+                            })
+                            st.dataframe(results_df)
+                            fig, ax = plt.subplots()
+                            ax.plot(results_df["Date"], results_df["Predicted Flood Value"], marker='o')
+                            ax.set_title("Predicted Flood Severity (Next 5–7 Days)")
+                            ax.set_xlabel("Date")
+                            ax.set_ylabel("Prediction Value")
+                            st.pyplot(fig)
+                        except Exception as e:
+                            st.error(f"Prediction failed: {e}")
+                else:
+                    st.info("No 'date' column found in your dataset.")
             
 
 else:
@@ -259,5 +269,6 @@ else:
 # Footer
 st.markdown("---")
 st.caption("Built with Streamlit — modify the file to add custom visualizations or model pipelines.")
+
 
 
