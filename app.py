@@ -144,106 +144,67 @@ if file_name.endswith(".csv"):
         test_size = st.slider("Test set proportion", 0.05, 0.5, 0.2)
         random_state = st.number_input("Random seed", value=42)
 
-        if st.button("Train model"):
-            # Prepare data
+        if st.button("Train model", key="train_model_button"):
             X = df[features].copy()
             y = df[target].copy()
-
-            # Basic preprocessing: drop rows with NA in X or y
             data = pd.concat([X, y], axis=1).dropna()
             X = data[features]
             y = data[target]
-
-            # Determine task type
             is_classification = pd.api.types.is_integer_dtype(y) or y.nunique() <= 20
-
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
-
-            if is_classification:
-                model = RandomForestClassifier(n_estimators=100, random_state=random_state)
-            else:
-                model = RandomForestRegressor(n_estimators=100, random_state=random_state)
-
+            model = RandomForestClassifier(n_estimators=100, random_state=random_state) if is_classification else RandomForestRegressor(n_estimators=100, random_state=random_state)
             with st.spinner("Training..."):
                 model.fit(X_train, y_train)
-
             y_pred = model.predict(X_test)
-
-            st.subheader("Model results")
             if is_classification:
-                acc = accuracy_score(y_test, y_pred)
-                st.write(f"Accuracy: **{acc:.4f}**")
+                st.write(f"Accuracy: **{accuracy_score(y_test, y_pred):.4f}**")
                 st.text(classification_report(y_test, y_pred))
             else:
-                mse = mean_squared_error(y_test, y_pred)
-                r2 = r2_score(y_test, y_pred)
-                st.write(f"MSE: **{mse:.4f}**")
-                st.write(f"R²: **{r2:.4f}**")
-
-            # Feature importances
-            try:
-                fi = pd.Series(model.feature_importances_, index=features).sort_values(ascending=False)
-                st.subheader("Feature importances")
-                st.dataframe(fi)
-
-                fig3, ax3 = plt.subplots()
-                fi.plot.bar(ax=ax3)
-                st.pyplot(fig3)
-            except Exception:
-                st.write("Feature importances are not available for this model.")
-
-            # Offer download
-            b = io.BytesIO()
-            joblib.dump(model, b)
-            b.seek(0)
-
-            st.download_button("Download trained model (.pkl)", data=b, file_name="rf_model.pkl", mime="application/octet-stream")
-            if st.button("Train model",key="train_model_button"):
-                ...
-                st.session_state["model"] = model
-                st.session_state["features"] = features
-                st.session_state["df"] = df
-            
-            # ---- Flood prediction section (outside the training block) ----
-            if "model" in st.session_state:
-                model = st.session_state["model"]
-                df = st.session_state["df"]
-                features = st.session_state["features"]
-            
-                st.header("📅 Flood Prediction for Future Dates")
-                if "date" in df.columns:
-                    today = pd.Timestamp.today()
-                    if today.year < 2019:
-                        today = pd.Timestamp("2019-01-01")
-                    elif today.year > 2025:
-                        today = pd.Timestamp("2025-12-31")
-                    st.write(f"Using current date for prediction: {today.date()}")
-                    input_date = today
-            
-                    if st.button("Predict Flood After 5–7 Days"):
-                        try:
-                            future_dates = [input_date + pd.Timedelta(days=d) for d in [5, 7]]
-                            st.write("🕒 Predicting flood for future dates:", future_dates)
-                            last_features = df[features].iloc[-1:].copy()
-                            preds = {}
-                            for d in future_dates:
-                                preds[str(d.date())] = model.predict(last_features)[0]
-                            st.subheader("🌧 Flood Prediction Results")
-                            results_df = pd.DataFrame({
-                                "Date": preds.keys(),
-                                "Predicted Flood Value": preds.values()
-                            })
-                            st.dataframe(results_df)
-                            fig, ax = plt.subplots()
-                            ax.plot(results_df["Date"], results_df["Predicted Flood Value"], marker='o')
-                            ax.set_title("Predicted Flood Severity (Next 5–7 Days)")
-                            ax.set_xlabel("Date")
-                            ax.set_ylabel("Prediction Value")
-                            st.pyplot(fig)
-                        except Exception as e:
-                            st.error(f"Prediction failed: {e}")
-                else:
-                    st.info("No 'date' column found in your dataset.")
+                st.write(f"MSE: **{mean_squared_error(y_test, y_pred):.4f}**")
+                st.write(f"R²: **{r2_score(y_test, y_pred):.4f}**")
+            st.session_state["model"] = model
+            st.session_state["features"] = features
+            st.session_state["df"] = df
+        
+        if "model" in st.session_state:
+            model = st.session_state["model"]
+            df = st.session_state["df"]
+            features = st.session_state["features"]
+        
+            st.header("📅 Flood Prediction for Future Dates")
+            if "date" in df.columns:
+                today = pd.Timestamp.today()
+                if today.year < 2019:
+                    today = pd.Timestamp("2019-01-01")
+                elif today.year > 2025:
+                    today = pd.Timestamp("2025-12-31")
+                st.write(f"Using current date for prediction: {today.date()}")
+                input_date = today
+        
+                if st.button("Predict Flood After 5–7 Days", key="predict_future_button"):
+                    try:
+                        future_dates = [input_date + pd.Timedelta(days=d) for d in [5, 7]]
+                        st.write("🕒 Predicting flood for future dates:", future_dates)
+                        last_features = df[features].iloc[-1:].copy()
+                        preds = {}
+                        for d in future_dates:
+                            preds[str(d.date())] = model.predict(last_features)[0]
+                        st.subheader("🌧 Flood Prediction Results")
+                        results_df = pd.DataFrame({
+                            "Date": preds.keys(),
+                            "Predicted Flood Value": preds.values()
+                        })
+                        st.dataframe(results_df)
+                        fig, ax = plt.subplots()
+                        ax.plot(results_df["Date"], results_df["Predicted Flood Value"], marker='o')
+                        ax.set_title("Predicted Flood Severity (Next 5–7 Days)")
+                        ax.set_xlabel("Date")
+                        ax.set_ylabel("Prediction Value")
+                        st.pyplot(fig)
+                    except Exception as e:
+                        st.error(f"Prediction failed: {e}")
+            else:
+                st.info("No 'date' column found in your dataset.")
             
 
 else:
@@ -269,6 +230,7 @@ else:
 # Footer
 st.markdown("---")
 st.caption("Built with Streamlit — modify the file to add custom visualizations or model pipelines.")
+
 
 
 
