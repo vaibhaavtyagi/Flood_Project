@@ -183,7 +183,7 @@ if file_name.endswith(".csv"):
         
                 if st.button("Predict Flood After 5–7 Days", key="predict_future_button"):
                     try:
-                        future_dates = [input_date + pd.Timedelta(days=d) for d in [5, 7]]
+                        future_dates = [input_date + pd.Timedelta(days=d) for d in range(1, 8)]
                         st.write("🕒 Predicting flood for future dates:", future_dates)
                         last_features = df[features].iloc[-1:].copy()
                         preds = {}
@@ -230,6 +230,7 @@ else:
 # Footer
 st.markdown("---")
 st.caption("Built with Streamlit — modify the file to add custom visualizations or model pipelines.")
+
 
 
 
