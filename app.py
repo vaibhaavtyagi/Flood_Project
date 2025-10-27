@@ -181,7 +181,7 @@ if file_name.endswith(".csv"):
                 st.write(f"Using current date for prediction: {today.date()}")
                 input_date = today
         
-                if st.button("Predict Flood After 5–7 Days", key="predict_future_button"):
+                if st.button("Predict Flood for 5–7 Days in Advance", key="predict_future_button"):
                     try:
                         future_dates = [input_date + pd.Timedelta(days=d) for d in range(1, 8)]
                         st.write("🕒 Predicting flood for future dates:", future_dates)
@@ -230,6 +230,7 @@ else:
 # Footer
 st.markdown("---")
 st.caption("Built with Streamlit — modify the file to add custom visualizations or model pipelines.")
+
 
 
 
